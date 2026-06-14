@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>बच्चों की जानकारी - ऑनलाइन</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 22px;
+            margin-bottom: 0;
+        }
+
+        /* Search & Button Section */
+        .search-section {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 0;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            background: #f9f9f9;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .btn-add-child {
+            padding: 10px 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            white-space: nowrap;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .btn-add-child:active {
+            transform: scale(0.95);
+        }
+
+        /* Custom Fields Section */
+        .custom-fields-section {
+            background: white;
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .custom-fields-header {
+            font-size: 12px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .custom-fields-container {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            min-height: 10px;
+        }
+
+        .custom-field-item {
+            background: #e8eaf6;
+            padding: 5px 8px;
+            border-radius: 5px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid #667eea;
+        }
+
+        .custom-field-item span {
+            color: #333;
+        }
+
+        .custom-field-item button {
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .add-custom-field {
+            display: flex;
+            gap: 6px;
+        }
+
+        .add-custom-field input {
+            flex: 1;
+            min-width: 0;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        .add-custom-field input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .add-custom-field button {
+            padding: 8px 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+
+        .add-custom-field button:active {
+            transform: scale(0.95);
+        }
+
+        /* List Section */
+        .list-section {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .list-section h2 {
+            color: #667eea;
+            margin-bottom: 12px;
+            font-size: 14px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .child-card {
+            background: #f8f9fa;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .child-card:active {
+            background: #e8eaf6;
+        }
+
+        .child-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .child-card h3 {
+            color: #667eea;
+            font-size: 14px;
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .child-card .card-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 4px;
+        }
+
+        .child-card p {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .child-age-badge {
+            font-size: 11px;
+            color: #764ba2;
+            font-weight: 600;
+            background: #f0ecf7;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .child-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .btn-edit, .btn-delete {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all 0.2s;
+            color: white;
+        }
+
+        .btn-edit {
+            background: #6c757d;
+        }
+
+        .btn-edit:active {
+            transform: scale(0.95);
+        }
+
+        .btn-delete {
+            background: #dc3545;
+        }
+
+        .btn-delete:active {
+            transform: scale(0.95);
+        }
+
+        .no-data {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-size: 12px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 100%;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-content h2 {
+            color: #667eea;
+            margin-bottom: 12px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+            font-size: 15px;
+        }
+
+        /* Custom Confirm Box Style */
+        .confirm-content {
+            max-width: 350px;
+            text-align: center;
+            padding: 20px;
+        }
+        .confirm-msg {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .confirm-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .btn-yes {
+            background: #dc3545;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .btn-no {
+            background: #6c757d;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 3px;
+            color: #333;
+            font-weight: 500;
+            font-size: 12px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .small-input {
+            max-width: 150px !important;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .section-title {
+            color: #667eea;
+            margin-top: 10px;
+            margin-bottom: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-submit {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            background: #667eea;
+            color: white;
+            margin-top: 12px;
+            transition: all 0.2s;
+        }
+
+        .btn-submit:active {
+            opacity: 0.8;
+        }
+
+        .btn-close {
+            background: #6c757d;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .btn-close:active {
+            opacity: 0.8;
+        }
+
+        .profile-group {
+            margin-bottom: 12px;
+        }
+
+        .profile-group h3 {
+            color: #333;
+            font-size: 11px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 4px;
+        }
+
+        .profile-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 11px;
+        }
+
+        .profile-item label {
+            font-weight: 600;
+            color: #555;
+            flex: 0 0 50%;
+        }
+
+        .profile-item value {
+            color: #667eea;
+            flex: 1;
+            word-break: break-word;
+            text-align: right;
+            padding-left: 10px;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: none;
+            font-size: 11px;
+        }
+
+        .success-message.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Mobile Optimizations */
+        @media (max-width: 600px) {
+            body { padding: 8px; }
+            .header { padding: 12px; }
+            .header h1 { font-size: 19px; }
+            .search-section { padding: 8px; gap: 6px; }
+            .search-box { padding: 9px; font-size: 12px; }
+            .btn-add-child { padding: 9px 10px; font-size: 11px; }
+            .custom-fields-section { padding: 8px 10px; }
+            .custom-fields-header { font-size: 11px; margin-bottom: 6px; }
+            .custom-fields-container { gap: 5px; margin-bottom: 8px; }
+            .custom-field-item { padding: 4px 7px; font-size: 10px; gap: 4px; }
+            .add-custom-field { gap: 5px; }
+            .add-custom-field input { padding: 7px; font-size: 11px; }
+            .add-custom-field button { padding: 7px 9px; font-size: 10px; }
+            .list-section { padding: 12px; }
+            .list-section h2 { margin-bottom: 10px; font-size: 13px; padding-bottom: 6px; }
+            .child-card { padding: 10px; margin-bottom: 8px; }
+            .child-card h3 { font-size: 13px; }
+            .child-card p, .child-age-badge { font-size: 10px; }
+            .btn-edit, .btn-delete { padding: 5px 8px; font-size: 10px; }
+            .modal { padding: 8px; }
+            .modal.active { padding-top: 15px; }
+            .modal-content { padding: 12px; max-height: calc(100vh - 30px); }
+            .modal-content h2 { margin-bottom: 10px; padding-bottom: 6px; font-size: 14px; }
+            .form-group { margin-bottom: 8px; }
+            .form-group label { margin-bottom: 2px; font-size: 11px; }
+            .form-group input { padding: 7px; font-size: 12px; }
+            .small-input { max-width: 120px !important; }
+            .form-row { gap: 8px; }
+            .section-title { margin-top: 8px; margin-bottom: 6px; font-size: 10px; }
+            .btn-submit { padding: 9px; font-size: 11px; margin-top: 10px; }
+            .btn-close { padding: 9px; font-size: 11px; margin-top: 6px; }
+            .profile-group { margin-bottom: 10px; }
+            .profile-group h3 { font-size: 10px; margin-bottom: 5px; padding-bottom: 3px; }
+            .profile-item { padding: 4px 0; font-size: 10px; }
+            .profile-item label { flex: 0 0 45%; }
+            .profile-item value { padding-left: 8px; }
+            .no-data { padding: 15px; font-size: 11px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>बच्चों की जानकारी (Online)</h1>
+        </div>
+
+        <div class="search-section">
+            <input type="text" id="searchInput" class="search-box" placeholder="🔍 नाम खोजें...">
+            <button class="btn-add-child" onclick="openAddChildModal()">➕ नया बच्चा जोड़ें</button>
+        </div>
+
+        <div class="custom-fields-section">
+            <div class="custom-fields-header">🔧 नया डब्बा बनाएं</div>
+            <div class="custom-fields-container" id="customFieldsList"></div>
+            <div class="add-custom-field">
+                <input type="text" id="newFieldName" placeholder="डिब्बे का नाम">
+                <button onclick="addCustomField()">जोड़ें</button>
+            </div>
+        </div>
+
+        <div class="list-section">
+            <h2>📋 बच्चों की प्रोफाइल</h2>
+            <div id="childList">
+                <div class="no-data">डेटा लोड हो रहा है...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="childFormModal">
+        <div class="modal-content">
+            <h2 id="formTitle">➕ नया बच्चा जोड़ें</h2>
+            <div class="success-message" id="successMsg">✓ जानकारी ऑनलाइन सुरक्षित हुई!</div>
+            <form id="childForm">
+                <div class="section-title">👧 बच्चे की जानकारी</div>
+                
+                <div class="form-group">
+                    <label>बच्चे का नाम</label>
+                    <input type="text" name="childName">
+                </div>
+
+                <div class="form-group">
+                    <label>लिंग (Gender)</label>
+                    <div style="display: flex; gap: 15px; margin-top: 5px;">
+                        <label style="display: flex; align-items: center; gap: 5px; font-weight: normal;">
+                            <input type="radio" name="gender" value="लड़का" style="margin: 0;"> 👦 लड़का
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px; font-weight: normal;">
+                            <input type="radio" name="gender" value="लड़की" style="margin: 0;"> 👧 लड़की
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px; font-weight: normal;">
+                            <input type="radio" name="gender" value="अन्य" style="margin: 0;"> अन्य
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>जन्मतिथि</label>
+                        <input type="text" name="dob" id="dobInput" placeholder="DD/MM/YYYY" maxlength="10">
+                    </div>
+                    <div class="form-group">
+                        <label>आधार नंबर</label>
+                        <input type="text" name="childAadhar">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>समग्र परिवार ID</label>
+                        <input type="text" name="familySamagraId" class="small-input">
+                    </div>
+                    <div class="form-group">
+                        <label>बच्चे की समग्र ID</label>
+                        <input type="text" name="samagraId" class="small-input">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>आभा ID</label>
+                        <input type="text" name="khabaId" class="small-input">
+                    </div>
+                    <div class="form-group">
+                        <label>अपार ID</label>
+                        <input type="text" name="aparId">
+                    </div>
+                </div>
+
+                <div class="section-title">👩 माता की जानकारी</div>
+                <div class="form-group">
+                    <label>माता का नाम</label>
+                    <input type="text" name="motherName">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>आधार नंबर</label>
+                        <input type="text" name="motherAadhar">
+                    </div>
+                    <div class="form-group">
+                        <label>फोन नंबर</label>
+                        <input type="tel" name="motherPhone">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>समग्र ID</label>
+                    <input type="text" name="motherSamagraId" class="small-input">
+                </div>
+
+                <div class="section-title">🏦 माता का बैंक खाता</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>खाता नंबर</label>
+                        <input type="text" name="motherBankAccount">
+                    </div>
+                    <div class="form-group">
+                        <label>बैंक का नाम</label>
+                        <input type="text" name="motherBankName">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>IFSC कोड</label>
+                    <input type="text" name="motherIfscCode" class="small-input">
+                </div>
+
+                <div class="section-title">👨 पिता की जानकारी</div>
+                <div class="form-group">
+                    <label>पिता का नाम</label>
+                    <input type="text" name="fatherName">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>आधार नंबर</label>
+                        <input type="text" name="fatherAadhar">
+                    </div>
+                    <div class="form-group">
+                        <label>फोन नंबर</label>
+                        <input type="tel" name="fatherPhone">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>समग्र ID</label>
+                    <input type="text" name="fatherSamagraId" class="small-input">
+                </div>
+
+                <div class="section-title">🏦 पिता का बैंक खाता</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>खाता नंबर</label>
+                        <input type="text" name="fatherBankAccount">
+                    </div>
+                    <div class="form-group">
+                        <label>बैंक का नाम</label>
+                        <input type="text" name="fatherBankName">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>IFSC कोड</label>
+                    <input type="text" name="fatherIfscCode" class="small-input">
+                </div>
+
+                <div id="customFieldsForm"></div>
+
+                <button type="submit" class="btn-submit">💾 सेव करें</button>
+                <button type="button" class="btn-close" onclick="closeAddChildModal()">बंद करें</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="profileModal">
+        <div class="modal-content" id="profileContent"></div>
+    </div>
+
+    <div class="modal" id="customConfirmModal">
+        <div class="modal-content confirm-content">
+            <div class="confirm-msg" id="confirmMsgText">क्या आप सचमुच डिलीट करना चाहते हैं?</div>
+            <div class="confirm-buttons">
+                <button class="btn-yes" id="confirmYesBtn">हाँ</button>
+                <button class="btn-no" id="confirmNoBtn">नहीं</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === आपकी Firebase Configuration सेटिंग (Asia Database Link के साथ) ===
+        const firebaseConfig = {
+            databaseURL: "https://angan-wadi-data-default-rtdb.asia-southeast1.firebasedatabase.app/"
+        };
+        
+        // Firebase को चालू करना
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let children = [];
+        let customFields = [];
+        let editingChildId = null;
+        let deleteCallback = null;
+
+        const form = document.getElementById('childForm');
+        const searchInput = document.getElementById('searchInput');
+        const childList = document.getElementById('childList');
+        const newFieldInput = document.getElementById('newFieldName');
+        const dobInput = document.getElementById('dobInput');
+
+        // Firebase से लाइव डेटा लोड करना (Realtime Sync)
+        database.ref('customFields').on('value', (snapshot) => {
+            customFields = snapshot.val() || [];
+            renderCustomFields();
+            renderCustomFieldsInForm();
+        });
+
+        database.ref('children').on('value', (snapshot) => {
+            const data = snapshot.val();
+            children = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [];
+            renderChildren();
+        });
+
+        // 'हाँ' / 'नहीं' डिब्बा पॉप-अप लॉजिक
+        function showCustomConfirm(message, onConfirm) {
+            document.getElementById('confirmMsgText').textContent = message;
+            document.getElementById('customConfirmModal').classList.add('active');
+            deleteCallback = onConfirm;
+        }
+
+        document.getElementById('confirmYesBtn').addEventListener('click', () => {
+            if (deleteCallback) deleteCallback();
+            closeCustomConfirm();
+        });
+
+        document.getElementById('confirmNoBtn').addEventListener('click', closeCustomConfirm);
+
+        function closeCustomConfirm() {
+            document.getElementById('customConfirmModal').classList.remove('active');
+            deleteCallback = null;
+        }
+
+        // जन्मतिथि ऑटो-फॉर्मेट (DD/MM/YYYY)
+        dobInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            let formattedValue = '';
+            
+            if (value.length > 0) {
+                formattedValue = value.substring(0, 2);
+                if (value.length > 2) {
+                    formattedValue += '/' + value.substring(2, 4);
+                    if (value.length > 4) {
+                        formattedValue += '/' + value.substring(4, 8);
+                    }
+                }
+            }
+            e.target.value = formattedValue;
+        });
+
+        function padZero(num) { return num < 10 ? '0' + num : num; }
+
+        // उम्र गणना लॉजिक
+        function calculateAgeString(dobStr) {
+            if (!dobStr) return '';
+            const parts = dobStr.split('/');
+            if (parts.length !== 3) return '';
+
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const year = parseInt(parts[2], 10);
+
+            if (isNaN(day) || isNaN(month) || isNaN(year)) return '';
+
+            const dobDate = new Date(year, month, day);
+            const today = new Date();
+
+            if (dobDate > today) return 'जन्मतिथि गलत है';
+
+            let years = today.getFullYear() - dobDate.getFullYear();
+            let months = today.getMonth() - dobDate.getMonth();
+            let days = today.getDate() - dobDate.getDate();
+
+            if (days < 0) {
+                months--;
+                const prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+                days += prevMonth.getDate();
+            }
+
+            if (months < 0) {
+                years--;
+                months += 12;
+            }
+
+            if (years < 1) {
+                return `${padZero(months)} महीने ${padZero(days)} दिन`;
+            } else {
+                return `${padZero(years)} वर्ष ${padZero(months)} महीने ${padZero(days)} दिन`;
+            }
+        }
+
+        // स्क्रीन पर एक्स्ट्रा डिब्बे रेंडर करना
+        function renderCustomFields() {
+            const container = document.getElementById('customFieldsList');
+            container.innerHTML = customFields.map((field, index) => `
+                <div class="custom-field-item">
+                    <span>${field}</span>
+                    <button type="button" onclick="removeCustomField(${index})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        // फॉर्म के अंदर एक्स्ट्रा डिब्बे रेंडर करना
+        function renderCustomFieldsInForm() {
+            const formSection = document.getElementById('customFieldsForm');
+            if (customFields.length === 0) {
+                formSection.innerHTML = '';
+            } else {
+                formSection.innerHTML = `
+                    <div class="section-title">📌 अतिरिक्त जानकारी</div>
+                    ${customFields.map(field => `
+                        <div class="form-group">
+                            <label>${field}</label>
+                            <input type="text" name="custom_${field.replace(/\s/g, '_')}">
+                        </div>
+                    `).join('')}
+                `;
+            }
+        }
+
+        // नया डिब्बा जोड़ना (Firebase पर अपलोड)
+        function addCustomField() {
+            const fieldName = newFieldInput.value.trim();
+            if (!fieldName || customFields.includes(fieldName)) return;
+
+            customFields.push(fieldName);
+            database.ref('customFields').set(customFields);
+            newFieldInput.value = '';
+        }
+
+        // डिब्बा डिलीट करना 
+        function removeCustomField(index) {
+            showCustomConfirm(`क्या आप सचमुच इस डिब्बे "${customFields[index]}" को डिलीट करना चाहते हैं?`, () => {
+                customFields.splice(index, 1);
+                database.ref('customFields').set(customFields);
+            });
+        }
+
+        function openAddChildModal() {
+            editingChildId = null;
+            document.getElementById('formTitle').textContent = '➕ नया बच्चा जोड़ें';
+            form.reset();
+            document.getElementById('childFormModal').classList.add('active');
+        }
+
+        function closeAddChildModal() {
+            document.getElementById('childFormModal').classList.remove('active');
+            editingChildId = null;
+        }
+
+        // नया बच्चा सेव करना या एडिट अपडेट करना (Firebase अपलोड)
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const childData = Object.fromEntries(formData);
+
+            if (editingChildId) {
+                database.ref('children/' + editingChildId).update(childData);
+            } else {
+                database.ref('children').push(childData);
+            }
+
+            const successMsg = document.getElementById('successMsg');
+            successMsg.classList.add('show');
+            setTimeout(() => {
+                successMsg.classList.remove('show');
+                closeAddChildModal();
+            }, 1000);
+        });
+
+        // लाइव सर्च फ़िल्टर
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = children.filter(c => 
+                (c.childName||'').toLowerCase().includes(term) || 
+                (c.fatherName||'').toLowerCase().includes(term) || 
+                (c.motherName||'').toLowerCase().includes(term)
+            );
+            renderChildren(filtered);
+        });
+
+        // प्रोफाइल लिस्ट दिखाना (माता के नाम के साइड में लाइव कैलकुलेटेड उम्र के साथ)
+        function renderChildren(list = children) {
+            if (list.length === 0) {
+                childList.innerHTML = '<div class="no-data">कोई बच्चा नहीं मिला</div>';
+                return;
+            }
+
+            childList.innerHTML = list.map(child => {
+                const genderIcon = child.gender === 'लड़का' ? '👦' : child.gender === 'लड़की' ? '👧' : '👶';
+                const calculatedAge = calculateAgeString(child.dob);
+                return `
+                <div class="child-card" onclick="openProfile('${child.id}')">
+                    <div class="child-header-row">
+                        <h3>${genderIcon} ${child.childName || 'बिना नाम'}</h3>
+                        <div class="child-actions">
+                            <button class="btn-edit" onclick="editChild('${child.id}', event)">✏️ एडिट</button>
+                            <button class="btn-delete" onclick="deleteChild('${child.id}', event)">🗑️ डिलीट</button>
+                        </div>
+                    </div>
+                    <div class="card-details">
+                        ${child.motherName ? `<p><strong>माता:</strong> ${child.motherName}</p>` : '<p></p>'}
+                        ${calculatedAge ? `<span class="child-age-badge">⏳ ${calculatedAge}</span>` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // पूरा प्रोफाइल व्यू मॉडल ओपन करना
+        function openProfile(id) {
+            const child = children.find(c => c.id === id);
+            if (!child) return;
+
+            let html = `<h2>${child.childName || 'प्रोफ़ाइल'}</h2><div class="profile-group">`;
+            
+            // डेटा को हिंदी लेबल में मैप करना
+            const labels = {
+                childName: "बच्चे का नाम", gender: "लिंग", dob: "जन्मतिथि", childAadhar: "बच्चे का आधार",
+                familySamagraId: "परिवार समग्र ID", samagraId: "बच्चे की समग्र ID", khabaId: "आभा ID", aparId: "अपार ID",
+                motherName: "माता का नाम", motherAadhar: "माता का आधार", motherPhone: "माता का फोन", motherSamagraId: "माता की समग्र ID",
+                motherBankAccount: "माता का बैंक खाता", motherBankName: "माता का बैंक नाम", motherIfscCode: "माता का IFSC",
+                fatherName: "पिता का नाम", fatherAadhar: "पिता का आधार", fatherPhone: "पिता का फोन", fatherSamagraId: "पिता की समग्र ID",
+                fatherBankAccount: "पिता का बैंक खाता", fatherBankName: "पिता का बैंक नाम", fatherIfscCode: "पिता का IFSC"
+            };
+
+            Object.keys(child).forEach(key => {
+                if(key !== 'id' && child[key]) {
+                    if (key.startsWith('custom_')) {
+                        const fieldRealName = key.replace('custom_', '').replace(/_/g, ' ');
+                        html += `<div class="profile-item"><label>${fieldRealName}:</label><value>${child[key]}</value></div>`;
+                    } else {
+                        html += `<div class="profile-item"><label>${labels[key] || key}:</label><value>${child[key]}</value></div>`;
+                    }
+                }
+            });
+
+            const ageStr = calculateAgeString(child.dob);
+            if(ageStr) html += `<div class="profile-item"><label>सटीक उम्र:</label><value style="font-weight:bold; color:#764ba2;">${ageStr}</value></div>`;
+
+            html += `</div><button class="btn-close" onclick="closeProfile()">बंद करें</button>`;
+            document.getElementById('profileContent').innerHTML = html;
+            document.getElementById('profileModal').classList.add('active');
+        }
+
+        function closeProfile() { document.getElementById('profileModal').classList.remove('active'); }
+
+        // एडिट करने के लिए फॉर्म भरना
+        function editChild(id, event) {
+            event.stopPropagation();
+            const child = children.find(c => c.id === id);
+            if (!child) return;
+
+            editingChildId = id;
+            document.getElementById('formTitle').textContent = '✏️ एडिट करें';
+            form.reset();
+
+            Object.keys(child).forEach(key => {
+                const input = form.querySelector(`input[name="${key}"]`);
+                if (input) {
+                    if(input.type === 'radio') {
+                        if(input.value === child[key]) input.checked = true;
+                    } else { input.value = child[key]; }
+                }
+            });
+            document.getElementById('childFormModal').classList.add('active');
+        }
+
+        // बच्चा डिलीट करने का कन्फर्मेशन बॉक्स ('हाँ' / 'नहीं')
+        function deleteChild(id, event) {
+            event.stopPropagation();
+            const child = children.find(c => c.id === id);
+            showCustomConfirm(`क्या आप सचमुच "${child ? child.childName : 'इस बच्चे'}" का रिकॉर्ड हमेशा के लिए हटाना चाहते हैं?`, () => {
+                database.ref('children/' + id).remove();
+            });
+        }
+
+        // बाहर क्लिक होने पर डिब्बे बंद होना
+        window.addEventListener('click', (e) => {
+            if (e.target.id === 'profileModal') closeProfile();
+            if (e.target.id === 'childFormModal') closeAddChildModal();
+            if (e.target.id === 'customConfirmModal') closeCustomConfirm();
+        });
+    </script>
+</body>
+</html>
+
