@@ -88,7 +88,7 @@
             transform: scale(0.95);
         }
 
-        /* Custom Fields Section */
+        /* Custom Fields Section (सुधार किया गया) */
         .custom-fields-section {
             background: white;
             padding: 10px 12px;
@@ -101,15 +101,19 @@
             font-size: 12px;
             font-weight: 600;
             color: #667eea;
-            margin-bottom: 8px;
+            margin-bottom: 4px; /* गैप कम किया गया */
         }
 
         .custom-fields-container {
             display: flex;
             gap: 6px;
             flex-wrap: wrap;
-            margin-bottom: 10px;
-            min-height: 10px;
+            margin-bottom: 0px; /* नीचे का गैप हटाया */
+        }
+
+        /* जब डिब्बे मौजूद हों तब थोड़ा स्पेस देने के लिए */
+        .custom-fields-container:not(:empty) {
+            margin-bottom: 6px;
         }
 
         .custom-field-item {
@@ -140,6 +144,7 @@
         .add-custom-field {
             display: flex;
             gap: 6px;
+            margin-top: 4px; /* इनपुट बॉक्स को सही दूरी पर रखने के लिए */
         }
 
         .add-custom-field input {
@@ -507,10 +512,11 @@
             .search-box { padding: 9px; font-size: 12px; }
             .btn-add-child { padding: 9px 10px; font-size: 11px; }
             .custom-fields-section { padding: 8px 10px; }
-            .custom-fields-header { font-size: 11px; margin-bottom: 6px; }
-            .custom-fields-container { gap: 5px; margin-bottom: 8px; }
+            .custom-fields-header { font-size: 11px; margin-bottom: 4px; }
+            .custom-fields-container { gap: 5px; margin-bottom: 0px; }
+            .custom-fields-container:not(:empty) { margin-bottom: 5px; }
             .custom-field-item { padding: 4px 7px; font-size: 10px; gap: 4px; }
-            .add-custom-field { gap: 5px; }
+            .add-custom-field { gap: 5px; margin-top: 3px; }
             .add-custom-field input { padding: 7px; font-size: 11px; }
             .add-custom-field button { padding: 7px 9px; font-size: 10px; }
             .list-section { padding: 12px; }
@@ -723,12 +729,10 @@
     </div>
 
     <script>
-        // === आपकी Firebase Configuration सेटिंग (Asia Database Link के साथ) ===
         const firebaseConfig = {
             databaseURL: "https://angan-wadi-data-default-rtdb.asia-southeast1.firebasedatabase.app/"
         };
         
-        // Firebase को चालू करना
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
@@ -743,7 +747,6 @@
         const newFieldInput = document.getElementById('newFieldName');
         const dobInput = document.getElementById('dobInput');
 
-        // Firebase से लाइव डेटा लोड करना (Realtime Sync)
         database.ref('customFields').on('value', (snapshot) => {
             customFields = snapshot.val() || [];
             renderCustomFields();
@@ -756,7 +759,6 @@
             renderChildren();
         });
 
-        // 'हाँ' / 'नहीं' डिब्बा पॉप-अप लॉजिक
         function showCustomConfirm(message, onConfirm) {
             document.getElementById('confirmMsgText').textContent = message;
             document.getElementById('customConfirmModal').classList.add('active');
@@ -775,7 +777,6 @@
             deleteCallback = null;
         }
 
-        // जन्मतिथि ऑटो-फॉर्मेट (DD/MM/YYYY)
         dobInput.addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, '');
             let formattedValue = '';
@@ -794,7 +795,6 @@
 
         function padZero(num) { return num < 10 ? '0' + num : num; }
 
-        // उम्र गणना लॉजिक
         function calculateAgeString(dobStr) {
             if (!dobStr) return '';
             const parts = dobStr.split('/');
@@ -833,7 +833,6 @@
             }
         }
 
-        // स्क्रीन पर एक्स्ट्रा डिब्बे रेंडर करना
         function renderCustomFields() {
             const container = document.getElementById('customFieldsList');
             container.innerHTML = customFields.map((field, index) => `
@@ -844,7 +843,6 @@
             `).join('');
         }
 
-        // फॉर्म के अंदर एक्स्ट्रा डिब्बे रेंडर करना
         function renderCustomFieldsInForm() {
             const formSection = document.getElementById('customFieldsForm');
             if (customFields.length === 0) {
@@ -862,7 +860,6 @@
             }
         }
 
-        // नया डिब्बा जोड़ना (Firebase पर अपलोड)
         function addCustomField() {
             const fieldName = newFieldInput.value.trim();
             if (!fieldName || customFields.includes(fieldName)) return;
@@ -872,7 +869,6 @@
             newFieldInput.value = '';
         }
 
-        // डिब्बा डिलीट करना 
         function removeCustomField(index) {
             showCustomConfirm(`क्या आप सचमुच इस डिब्बे "${customFields[index]}" को डिलीट करना चाहते हैं?`, () => {
                 customFields.splice(index, 1);
@@ -892,7 +888,6 @@
             editingChildId = null;
         }
 
-        // नया बच्चा सेव करना या एडिट अपडेट करना (Firebase अपलोड)
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             const formData = new FormData(form);
@@ -912,7 +907,6 @@
             }, 1000);
         });
 
-        // लाइव सर्च फ़िल्टर
         searchInput.addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
             const filtered = children.filter(c => 
@@ -923,7 +917,6 @@
             renderChildren(filtered);
         });
 
-        // प्रोफाइल लिस्ट दिखाना (माता के नाम के साइड में लाइव कैलकुलेटेड उम्र के साथ)
         function renderChildren(list = children) {
             if (list.length === 0) {
                 childList.innerHTML = '<div class="no-data">कोई बच्चा नहीं मिला</div>';
@@ -950,14 +943,12 @@
             }).join('');
         }
 
-        // पूरा प्रोफाइल व्यू मॉडल ओपन करना
         function openProfile(id) {
             const child = children.find(c => c.id === id);
             if (!child) return;
 
             let html = `<h2>${child.childName || 'प्रोफ़ाइल'}</h2><div class="profile-group">`;
             
-            // डेटा को हिंदी लेबल में मैप करना
             const labels = {
                 childName: "बच्चे का नाम", gender: "लिंग", dob: "जन्मतिथि", childAadhar: "बच्चे का आधार",
                 familySamagraId: "परिवार समग्र ID", samagraId: "बच्चे की समग्र ID", khabaId: "आभा ID", aparId: "अपार ID",
@@ -973,7 +964,7 @@
                         const fieldRealName = key.replace('custom_', '').replace(/_/g, ' ');
                         html += `<div class="profile-item"><label>${fieldRealName}:</label><value>${child[key]}</value></div>`;
                     } else {
-                        html += `<div class="profile-item"><label>${labels[key] || key}:</label><value>${child[key]}</value></div>`;
+                        html += `<div class="profile-item"><label>${labels[key] || key}:</label><value>[Aadhaar Redacted]</value></div>`;
                     }
                 }
             });
@@ -988,7 +979,6 @@
 
         function closeProfile() { document.getElementById('profileModal').classList.remove('active'); }
 
-        // एडिट करने के लिए फॉर्म भरना
         function editChild(id, event) {
             event.stopPropagation();
             const child = children.find(c => c.id === id);
@@ -1009,7 +999,6 @@
             document.getElementById('childFormModal').classList.add('active');
         }
 
-        // बच्चा डिलीट करने का कन्फर्मेशन बॉक्स ('हाँ' / 'नहीं')
         function deleteChild(id, event) {
             event.stopPropagation();
             const child = children.find(c => c.id === id);
@@ -1018,7 +1007,6 @@
             });
         }
 
-        // बाहर क्लिक होने पर डिब्बे बंद होना
         window.addEventListener('click', (e) => {
             if (e.target.id === 'profileModal') closeProfile();
             if (e.target.id === 'childFormModal') closeAddChildModal();
@@ -1027,4 +1015,3 @@
     </script>
 </body>
 </html>
-
